@@ -57,6 +57,7 @@ export const BODIES = [
       normalMap: 'textures/earth_normal.jpg',
       clouds: 'textures/earth_clouds.jpg',
     },
+    atmosphere: { color: [0.3, 0.6, 1.0], intensity: 0.6, falloff: 5.0 },
   },
   {
     name: 'Mars',

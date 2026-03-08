@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { CameraManager } from './controls/CameraManager.js';
 import { SolarSystem } from './scene/SolarSystem.js';
 import { Starfield } from './scene/Starfield.js';
@@ -45,10 +49,25 @@ scene.add(starfield);
 // Time controller
 const timeController = new TimeController();
 
+// Post-processing
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.8, 0.4, 0.85,
+));
+composer.addPass(new OutputPass());
+
 // HUD
-const hud = new HUD(timeController);
+const hud = new HUD(timeController, cameraManager);
 hud.onBodySelected = (name) => cameraManager.landOnBody(name);
-cameraManager.onModeChange = (mode) => hud.setMode(mode);
+cameraManager.onModeChange = (mode, bodyName) => hud.setMode(mode, bodyName);
+
+// Orbit lines toggle
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyO' && e.target === document.body) {
+    solarSystem.toggleOrbitLines();
+  }
+});
 
 // Loading overlay
 new LoadingOverlay();
@@ -62,6 +81,8 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  composer.setSize(window.innerWidth, window.innerHeight);
+  composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
 // Animation loop
@@ -72,6 +93,6 @@ function animate() {
   solarSystem.update(simDelta);
   hud.update();
   cameraManager.update(delta);
-  renderer.render(scene, camera);
+  composer.render(delta);
 }
 animate();

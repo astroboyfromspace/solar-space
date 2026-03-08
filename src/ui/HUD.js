@@ -1,8 +1,10 @@
+import * as THREE from 'three';
 import { BODIES } from '../data/bodies.js';
 
 export class HUD {
-  constructor(timeController) {
+  constructor(timeController, cameraManager) {
     this.timeController = timeController;
+    this.cameraManager = cameraManager;
     this.onBodySelected = null;
 
     this.element = document.createElement('div');
@@ -25,6 +27,10 @@ export class HUD {
     // Mode indicator
     this.modeEl = document.createElement('div');
     this.modeEl.style.cssText = 'color: #44ff44; font-weight: bold; margin-bottom: 4px; display: none;';
+
+    // Location (lat/lon) in surface mode
+    this.locationEl = document.createElement('div');
+    this.locationEl.style.cssText = 'font-size: 13px; opacity: 0.7; margin-bottom: 4px; display: none;';
 
     // Time info
     this.timeScaleEl = document.createElement('div');
@@ -94,6 +100,7 @@ export class HUD {
 
     this.element.appendChild(title);
     this.element.appendChild(this.modeEl);
+    this.element.appendChild(this.locationEl);
     this.element.appendChild(this.timeScaleEl);
     this.element.appendChild(sliderContainer);
     this.element.appendChild(selectContainer);
@@ -109,6 +116,13 @@ export class HUD {
         timeController.togglePause();
       }
     });
+
+    // Sky labels container
+    this._labelContainer = document.createElement('div');
+    this._labelContainer.style.cssText = 'position: fixed; inset: 0; pointer-events: none; overflow: hidden;';
+    document.body.appendChild(this._labelContainer);
+    this._labels = new Map();
+    this._tmpVec = new THREE.Vector3();
   }
 
   _clearElement(el) {
@@ -129,6 +143,7 @@ export class HUD {
       'Scroll \u2014 zoom',
       'MMB \u2014 pan',
       'Click body \u2014 land',
+      'O \u2014 toggle orbits',
       'Space \u2014 pause/play',
     ]);
   }
@@ -139,17 +154,19 @@ export class HUD {
       'WASD \u2014 walk',
       'Shift \u2014 run',
       'F \u2014 return to free-fly',
+      'O \u2014 toggle orbits',
       'Space \u2014 pause/play',
     ]);
   }
 
-  setMode(mode) {
+  setMode(mode, bodyName) {
     if (mode === 'surface') {
       this.modeEl.style.display = 'block';
-      this.modeEl.textContent = 'SURFACE VIEW';
+      this.modeEl.textContent = bodyName ? `SURFACE VIEW \u2014 ${bodyName}` : 'SURFACE VIEW';
       this._setSurfaceHints();
     } else {
       this.modeEl.style.display = 'none';
+      this.locationEl.style.display = 'none';
       this._setFreeflyHints();
     }
   }
@@ -173,6 +190,86 @@ export class HUD {
     if (this._lastPause !== pauseText) {
       this._lastPause = pauseText;
       this.pauseEl.textContent = pauseText;
+    }
+
+    this._updateLocation();
+    this._updateSkyLabels();
+  }
+
+  _updateLocation() {
+    const info = this.cameraManager.getSurfaceInfo();
+    if (!info) {
+      if (this.locationEl.style.display !== 'none') {
+        this.locationEl.style.display = 'none';
+      }
+      return;
+    }
+    this.locationEl.style.display = 'block';
+    const latDeg = Math.abs(THREE.MathUtils.radToDeg(info.latitude)).toFixed(1);
+    const lonDeg = Math.abs(THREE.MathUtils.radToDeg(info.longitude)).toFixed(1);
+    const latDir = info.latitude >= 0 ? 'N' : 'S';
+    const lonDir = info.longitude >= 0 ? 'E' : 'W';
+    const text = `${latDeg}\u00B0${latDir} ${lonDeg}\u00B0${lonDir}`;
+    if (this._lastLoc !== text) {
+      this._lastLoc = text;
+      this.locationEl.textContent = text;
+    }
+  }
+
+  _getOrCreateLabel(name) {
+    let el = this._labels.get(name);
+    if (el) return el;
+    el = document.createElement('div');
+    el.style.cssText = `
+      position: absolute;
+      left: 0; top: 0;
+      color: rgba(255, 255, 255, 0.7);
+      font-family: monospace;
+      font-size: 11px;
+      text-shadow: 0 0 4px rgba(0,0,0,0.8);
+      white-space: nowrap;
+      pointer-events: none;
+      display: none;
+    `;
+    el.textContent = name;
+    this._labelContainer.appendChild(el);
+    this._labels.set(name, el);
+    return el;
+  }
+
+  _updateSkyLabels() {
+    const cm = this.cameraManager;
+    if (cm.mode !== 'surface') {
+      for (const el of this._labels.values()) {
+        if (el.style.display !== 'none') el.style.display = 'none';
+      }
+      return;
+    }
+
+    const camera = cm.camera;
+    const halfW = window.innerWidth / 2;
+    const halfH = window.innerHeight / 2;
+
+    for (const { name, body } of cm.iterBodies()) {
+      const el = this._getOrCreateLabel(name);
+      body.mesh.getWorldPosition(this._tmpVec);
+      this._tmpVec.project(camera);
+
+      if (this._tmpVec.z > 1) {
+        if (el.style.display !== 'none') el.style.display = 'none';
+        continue;
+      }
+
+      const x = this._tmpVec.x * halfW + halfW;
+      const y = -this._tmpVec.y * halfH + halfH;
+
+      if (x < -50 || x > window.innerWidth + 50 || y < -50 || y > window.innerHeight + 50) {
+        if (el.style.display !== 'none') el.style.display = 'none';
+        continue;
+      }
+
+      el.style.display = 'block';
+      el.style.transform = `translate(${x - 0.5}px, ${y}px) translate(-50%, -100%)`;
     }
   }
 }

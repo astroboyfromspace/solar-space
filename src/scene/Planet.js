@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CelestialBody, GOLDEN_ANGLE } from './CelestialBody.js';
 import { loadTexture, applyTextureOpts } from '../loaders/TextureManager.js';
+import { Atmosphere } from './Atmosphere.js';
 
 // Counter to assign each planet a unique spread angle
 let planetIndex = 0;
@@ -38,6 +39,11 @@ export class Planet extends CelestialBody {
       this.cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
       this.cloudAngularVelocity = this.rotationAngularVelocity * 0.05;
       this.mesh.add(this.cloudMesh);
+    }
+
+    // Atmosphere halo
+    if (bodyData.atmosphere) {
+      this.mesh.add(new Atmosphere(bodyData.displayRadius, bodyData.atmosphere));
     }
 
     // Position using golden-angle spread

@@ -4,6 +4,7 @@ import { Sun } from './Sun.js';
 import { Planet, resetPlanetIndex } from './Planet.js';
 import { Moon, resetMoonIndices } from './Moon.js';
 import { Rings } from './Rings.js';
+import { OrbitLines } from './OrbitLines.js';
 
 export class SolarSystem extends THREE.Group {
   constructor() {
@@ -52,6 +53,12 @@ export class SolarSystem extends THREE.Group {
         this.add(obj);
       }
     }
+
+    this._orbitLines = new OrbitLines(this);
+  }
+
+  toggleOrbitLines() {
+    return this._orbitLines.toggle();
   }
 
   update(simDelta) {

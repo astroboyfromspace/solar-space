@@ -19,6 +19,7 @@ export class CameraManager {
 
     this.mode = 'freefly'; // 'freefly' | 'surface' | 'transition'
     this.onModeChange = null; // callback for HUD
+    this._surfaceInfo = { latitude: 0, longitude: 0 };
 
     // Raycasting
     this.raycaster = new THREE.Raycaster();
@@ -166,7 +167,7 @@ export class CameraManager {
     this.camera.near = NEAR_SURFACE;
     this.camera.updateProjectionMatrix();
     this.surfaceCamera.land(body, lat, lon);
-    if (this.onModeChange) this.onModeChange('surface');
+    if (this.onModeChange) this.onModeChange('surface', body.bodyData.name);
   }
 
   _activateFreeflyMode() {
@@ -175,6 +176,21 @@ export class CameraManager {
     this.camera.updateProjectionMatrix();
     this.freeCamera.enable();
     if (this.onModeChange) this.onModeChange('freefly');
+  }
+
+  getSurfaceInfo() {
+    if (this.mode !== 'surface' || !this.surfaceCamera.active) return null;
+    this._surfaceInfo.latitude = this.surfaceCamera.latitude;
+    this._surfaceInfo.longitude = this.surfaceCamera.longitude;
+    return this._surfaceInfo;
+  }
+
+  /** Yield { name, body } for each body except the one the camera is on. */
+  *iterBodies() {
+    const exclude = this.mode === 'surface' ? this.surfaceCamera.body : null;
+    for (const [name, body] of this.solarSystem.bodyObjects) {
+      if (body !== exclude) yield { name, body };
+    }
   }
 
   landOnBody(name) {
