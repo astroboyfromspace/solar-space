@@ -22,7 +22,7 @@ manager.onLoad = () => {
  * @returns {THREE.Texture}
  */
 export function loadTexture(path, isSRGB = true) {
-  const texture = loader.load(path);
+  const texture = loader.load(import.meta.env.BASE_URL + path);
   if (isSRGB) {
     texture.colorSpace = THREE.SRGBColorSpace;
   }
