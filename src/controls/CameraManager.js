@@ -193,7 +193,7 @@ export class CameraManager {
     if (this.mode === 'freefly') {
       this.freeCamera.update();
     } else if (this.mode === 'surface') {
-      this.surfaceCamera.update();
+      this.surfaceCamera.update(delta);
     } else if (this.mode === 'transition') {
       this._updateTransition(delta);
     }

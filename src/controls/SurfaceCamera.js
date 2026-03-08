@@ -3,6 +3,9 @@ import * as THREE from 'three';
 const SURFACE_HOVER = 0.02;
 const MOUSE_SENSITIVITY = 0.002;
 const MAX_PITCH = 85 * THREE.MathUtils.DEG2RAD;
+const BASE_WALK_SPEED = 0.15;
+const RUN_MULTIPLIER = 3;
+const MAX_LATITUDE = 89.5 * THREE.MathUtils.DEG2RAD;
 
 /** Compute mesh-local surface position from lat/lon (radians). */
 export function surfaceLocalPosition(out, body, lat, lon) {
@@ -42,6 +45,21 @@ export class SurfaceCamera {
     this._mat4 = new THREE.Matrix4();
     this._surfacePos = new THREE.Vector3();
 
+    // Key state for WASD walking
+    this._keys = { w: false, a: false, s: false, d: false, shift: false };
+
+    this._onKeyDown = (e) => {
+      if (!this.active) return;
+      this._setKey(e.code, true);
+    };
+
+    this._onKeyUp = (e) => {
+      this._setKey(e.code, false);
+    };
+
+    window.addEventListener('keydown', this._onKeyDown);
+    window.addEventListener('keyup', this._onKeyUp);
+
     // Pointer lock events
     document.addEventListener('pointerlockchange', () => {
       this._pointerLocked = document.pointerLockElement === this.domElement;
@@ -63,6 +81,21 @@ export class SurfaceCamera {
     this.domElement.addEventListener('click', this._onCanvasClick);
   }
 
+  _setKey(code, value) {
+    switch (code) {
+      case 'KeyW': this._keys.w = value; break;
+      case 'KeyA': this._keys.a = value; break;
+      case 'KeyS': this._keys.s = value; break;
+      case 'KeyD': this._keys.d = value; break;
+      case 'ShiftLeft':
+      case 'ShiftRight': this._keys.shift = value; break;
+    }
+  }
+
+  _resetKeys() {
+    this._keys.w = this._keys.a = this._keys.s = this._keys.d = this._keys.shift = false;
+  }
+
   land(body, lat, lon) {
     this.body = body;
     this.latitude = lat;
@@ -70,6 +103,7 @@ export class SurfaceCamera {
     this.yaw = 0;
     this.pitch = 0;
     this.active = true;
+    this._resetKeys();
 
     // Parent camera to body mesh
     body.mesh.add(this.camera);
@@ -80,8 +114,32 @@ export class SurfaceCamera {
     this.update();
   }
 
-  update() {
+  update(delta) {
     if (!this.active || !this.body) return;
+
+    // WASD walking — update lat/lon before tangent frame computation
+    if (delta > 0) {
+      const moveForward = (this._keys.w ? 1 : 0) - (this._keys.s ? 1 : 0);
+      const moveRight = (this._keys.d ? 1 : 0) - (this._keys.a ? 1 : 0);
+
+      if (moveForward !== 0 || moveRight !== 0) {
+        let speed = BASE_WALK_SPEED;
+        if (this._keys.shift) speed *= RUN_MULTIPLIER;
+
+        const cosYaw = Math.cos(this.yaw);
+        const sinYaw = Math.sin(this.yaw);
+        const northStep = moveForward * cosYaw - moveRight * sinYaw;
+        const eastStep = moveForward * sinYaw + moveRight * cosYaw;
+
+        // Normalize diagonal movement so diagonal speed equals cardinal speed
+        const len = Math.sqrt(moveForward * moveForward + moveRight * moveRight);
+        const step = speed * delta / len;
+
+        this.latitude += step * northStep;
+        this.latitude = THREE.MathUtils.clamp(this.latitude, -MAX_LATITUDE, MAX_LATITUDE);
+        this.longitude += step * eastStep / Math.cos(this.latitude);
+      }
+    }
 
     const lat = this.latitude;
     const lon = this.longitude;
@@ -143,6 +201,7 @@ export class SurfaceCamera {
 
     this.active = false;
     this.body = null;
+    this._resetKeys();
 
     return { position, quaternion, body };
   }

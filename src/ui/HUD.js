@@ -136,6 +136,8 @@ export class HUD {
   _setSurfaceHints() {
     this._setHintLines([
       'Mouse \u2014 look around',
+      'WASD \u2014 walk',
+      'Shift \u2014 run',
       'F \u2014 return to free-fly',
       'Space \u2014 pause/play',
     ]);
