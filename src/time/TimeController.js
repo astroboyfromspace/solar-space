@@ -4,7 +4,10 @@ export const MAX_TIME_SCALE = 31_557_600;
 export const DEFAULT_TIME_SCALE = 86_400; // 1s = 1 day
 
 // J2000 epoch: 2000-01-01T12:00:00Z
-const J2000_MS = Date.UTC(2000, 0, 1, 12, 0, 0);
+export const J2000_MS = Date.UTC(2000, 0, 1, 12, 0, 0);
+
+// Simulation starts at 2026-01-01T00:00:00Z
+export const INITIAL_SIM_TIME = (Date.UTC(2026, 0, 1, 0, 0, 0) - J2000_MS) / 1000;
 
 const LOG_MIN = Math.log(MIN_TIME_SCALE);
 const LOG_MAX = Math.log(MAX_TIME_SCALE);
@@ -14,7 +17,7 @@ export class TimeController {
   constructor() {
     this.timeScale = DEFAULT_TIME_SCALE;
     this.paused = false;
-    this.simulatedTime = 0; // accumulated sim-seconds from J2000
+    this.simulatedTime = INITIAL_SIM_TIME;
   }
 
   update(realDelta) {

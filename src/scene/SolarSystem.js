@@ -1,17 +1,14 @@
 import * as THREE from 'three';
 import { BODIES } from '../data/bodies.js';
 import { Sun } from './Sun.js';
-import { Planet, resetPlanetIndex } from './Planet.js';
-import { Moon, resetMoonIndices } from './Moon.js';
+import { Planet } from './Planet.js';
+import { Moon } from './Moon.js';
 import { Rings } from './Rings.js';
 import { OrbitLines } from './OrbitLines.js';
 
 export class SolarSystem extends THREE.Group {
   constructor() {
     super();
-
-    resetPlanetIndex();
-    resetMoonIndices();
 
     this.bodyObjects = new Map();
 
