@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { FreeCamera } from './controls/FreeCamera.js';
 import { SolarSystem } from './scene/SolarSystem.js';
 import { Starfield } from './scene/Starfield.js';
+import { TimeController } from './time/TimeController.js';
 import { HUD } from './ui/HUD.js';
 
 // Renderer
@@ -35,8 +36,11 @@ scene.add(solarSystem);
 const starfield = new Starfield();
 scene.add(starfield);
 
+// Time controller
+const timeController = new TimeController();
+
 // HUD
-const hud = new HUD();
+const hud = new HUD(timeController);
 
 // Clock
 const clock = new THREE.Clock();
@@ -53,6 +57,9 @@ window.addEventListener('resize', () => {
 function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
+  const simDelta = timeController.update(delta);
+  solarSystem.update(simDelta);
+  hud.update();
   freeCamera.update();
   renderer.render(scene, camera);
 }

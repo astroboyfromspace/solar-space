@@ -32,10 +32,10 @@ export class SolarSystem extends THREE.Group {
 
       this.bodyObjects.set(data.name, obj);
 
-      // Add rings if specified
+      // Add rings if specified (parent to mesh so rings tilt with axial tilt)
       if (data.rings) {
         const rings = new Rings(data.rings.innerRadius, data.rings.outerRadius, data.color);
-        obj.add(rings);
+        obj.mesh.add(rings);
       }
     }
 
@@ -51,6 +51,12 @@ export class SolarSystem extends THREE.Group {
       } else {
         this.add(obj);
       }
+    }
+  }
+
+  update(simDelta) {
+    for (const body of this.bodyObjects.values()) {
+      body.update(simDelta);
     }
   }
 }
