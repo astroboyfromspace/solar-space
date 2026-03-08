@@ -19,23 +19,31 @@ export class Rings extends THREE.Mesh {
     let material;
     if (texturePath) {
       const ringTexture = loadTexture(texturePath);
-      material = new THREE.MeshBasicMaterial({
+      material = new THREE.MeshStandardMaterial({
         map: ringTexture,
         alphaMap: ringTexture,
         side: THREE.DoubleSide,
         transparent: true,
+        alphaTest: 0.05,
         depthWrite: false,
+        roughness: 0.9,
+        metalness: 0.0,
+        color: 0xffffff,
       });
     } else {
-      material = new THREE.MeshBasicMaterial({
+      material = new THREE.MeshStandardMaterial({
         color: color,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.6,
+        roughness: 0.9,
+        metalness: 0.0,
       });
     }
 
     super(geometry, material);
+    this.castShadow = true;
+    this.receiveShadow = true;
 
     // Rotate to lie in XZ plane
     this.rotation.x = -Math.PI / 2;

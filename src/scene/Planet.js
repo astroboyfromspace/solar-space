@@ -18,6 +18,8 @@ export class Planet extends CelestialBody {
     const material = new THREE.MeshStandardMaterial(matOpts);
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.rotation.x = THREE.MathUtils.degToRad(bodyData.axialTilt);
+    this.mesh.castShadow = true;
+    this.mesh.receiveShadow = true;
     this.add(this.mesh);
 
     // Earth cloud layer
