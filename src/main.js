@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FreeCamera } from './controls/FreeCamera.js';
+import { CameraManager } from './controls/CameraManager.js';
 import { SolarSystem } from './scene/SolarSystem.js';
 import { Starfield } from './scene/Starfield.js';
 import { TimeController } from './time/TimeController.js';
@@ -7,7 +7,10 @@ import { HUD } from './ui/HUD.js';
 import { LoadingOverlay } from './ui/LoadingOverlay.js';
 
 // Renderer
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  logarithmicDepthBuffer: true,
+});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -28,12 +31,12 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 80, 200);
 
-// Controls
-const freeCamera = new FreeCamera(camera, renderer.domElement);
-
 // Solar system
 const solarSystem = new SolarSystem();
 scene.add(solarSystem);
+
+// Controls
+const cameraManager = new CameraManager(camera, renderer.domElement, solarSystem);
 
 // Starfield
 const starfield = new Starfield();
@@ -44,6 +47,8 @@ const timeController = new TimeController();
 
 // HUD
 const hud = new HUD(timeController);
+hud.onBodySelected = (name) => cameraManager.landOnBody(name);
+cameraManager.onModeChange = (mode) => hud.setMode(mode);
 
 // Loading overlay
 new LoadingOverlay();
@@ -66,7 +71,7 @@ function animate() {
   const simDelta = timeController.update(delta);
   solarSystem.update(simDelta);
   hud.update();
-  freeCamera.update();
+  cameraManager.update(delta);
   renderer.render(scene, camera);
 }
 animate();

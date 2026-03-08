@@ -10,6 +10,18 @@ export class FreeCamera {
     this.controls.target.set(0, 0, 0);
   }
 
+  enable() {
+    this.controls.enabled = true;
+  }
+
+  disable() {
+    this.controls.enabled = false;
+  }
+
+  setTarget(vec3) {
+    this.controls.target.copy(vec3);
+  }
+
   update() {
     this.controls.update();
   }
