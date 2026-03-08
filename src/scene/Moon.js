@@ -1,8 +1,6 @@
 import * as THREE from 'three';
-import { degToRad } from 'three/src/math/MathUtils.js';
-import { CelestialBody } from './CelestialBody.js';
-
-const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+import { CelestialBody, GOLDEN_ANGLE } from './CelestialBody.js';
+import { applyTextureOpts } from '../loaders/TextureManager.js';
 
 // Per-parent moon index for golden-angle spread
 const moonIndices = new Map();
@@ -15,16 +13,11 @@ export class Moon extends CelestialBody {
   constructor(bodyData) {
     super(bodyData);
 
-    this.orbitalRadius = bodyData.displayOrbitalRadius;
-
     const geometry = new THREE.SphereGeometry(bodyData.displayRadius, 24, 24);
-    const material = new THREE.MeshStandardMaterial({
-      color: bodyData.color,
-      roughness: 0.8,
-      metalness: 0.1,
-    });
+    const matOpts = applyTextureOpts({ roughness: 0.8, metalness: 0.1 }, bodyData);
+    const material = new THREE.MeshStandardMaterial(matOpts);
     this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.rotation.x = degToRad(bodyData.axialTilt);
+    this.mesh.rotation.x = THREE.MathUtils.degToRad(bodyData.axialTilt);
     this.add(this.mesh);
 
     // Golden-angle spread per parent
@@ -38,20 +31,6 @@ export class Moon extends CelestialBody {
       0,
       Math.sin(angle) * this.orbitalRadius,
     );
-
     this.orbitalAngle = angle;
-  }
-
-  update(simDelta) {
-    // Orbital motion (in parent's local space)
-    this.orbitalAngle += this.orbitalAngularVelocity * simDelta;
-    this.position.set(
-      Math.cos(this.orbitalAngle) * this.orbitalRadius,
-      0,
-      Math.sin(this.orbitalAngle) * this.orbitalRadius,
-    );
-
-    // Self-rotation
-    this.mesh.rotation.y += this.rotationAngularVelocity * simDelta;
   }
 }

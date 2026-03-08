@@ -34,7 +34,7 @@ export class SolarSystem extends THREE.Group {
 
       // Add rings if specified (parent to mesh so rings tilt with axial tilt)
       if (data.rings) {
-        const rings = new Rings(data.rings.innerRadius, data.rings.outerRadius, data.color);
+        const rings = new Rings(data.rings.innerRadius, data.rings.outerRadius, data.color, data.rings.texture);
         obj.mesh.add(rings);
       }
     }

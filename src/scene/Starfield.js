@@ -9,8 +9,9 @@ export class Starfield extends THREE.Points {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
 
-      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      const sinPhi = Math.sin(phi);
+      positions[i * 3] = radius * sinPhi * Math.cos(theta);
+      positions[i * 3 + 1] = radius * sinPhi * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
     }
 

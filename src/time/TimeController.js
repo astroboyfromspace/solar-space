@@ -6,6 +6,10 @@ export const DEFAULT_TIME_SCALE = 86_400; // 1s = 1 day
 // J2000 epoch: 2000-01-01T12:00:00Z
 const J2000_MS = Date.UTC(2000, 0, 1, 12, 0, 0);
 
+const LOG_MIN = Math.log(MIN_TIME_SCALE);
+const LOG_MAX = Math.log(MAX_TIME_SCALE);
+const LOG_RANGE = LOG_MAX - LOG_MIN;
+
 export class TimeController {
   constructor() {
     this.timeScale = DEFAULT_TIME_SCALE;
@@ -26,16 +30,12 @@ export class TimeController {
 
   // slider value 0..1 → log interpolation between MIN and MAX
   setTimeScaleFromSlider(t) {
-    const logMin = Math.log(MIN_TIME_SCALE);
-    const logMax = Math.log(MAX_TIME_SCALE);
-    this.timeScale = Math.exp(logMin + t * (logMax - logMin));
+    this.timeScale = Math.exp(LOG_MIN + t * LOG_RANGE);
   }
 
   // Returns slider position 0..1 from current timeScale
   get sliderValue() {
-    const logMin = Math.log(MIN_TIME_SCALE);
-    const logMax = Math.log(MAX_TIME_SCALE);
-    return (Math.log(this.timeScale) - logMin) / (logMax - logMin);
+    return (Math.log(this.timeScale) - LOG_MIN) / LOG_RANGE;
   }
 
   get timeScaleLabel() {

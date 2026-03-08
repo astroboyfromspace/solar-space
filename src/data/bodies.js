@@ -14,6 +14,7 @@ export const BODIES = [
     axialTilt: 7.25,        // degrees
     color: 0xffdd44,
     parent: null,
+    textures: { map: 'textures/sun.jpg' },
   },
 
   // Inner planets
@@ -27,6 +28,7 @@ export const BODIES = [
     axialTilt: 0.034,
     color: 0xaaaaaa,
     parent: null,
+    textures: { map: 'textures/mercury.jpg' },
   },
   {
     name: 'Venus',
@@ -38,6 +40,7 @@ export const BODIES = [
     axialTilt: 177.4,
     color: 0xe8cda0,
     parent: null,
+    textures: { map: 'textures/venus_atmosphere.jpg' },
   },
   {
     name: 'Earth',
@@ -49,6 +52,11 @@ export const BODIES = [
     axialTilt: 23.44,
     color: 0x4488ff,
     parent: null,
+    textures: {
+      map: 'textures/earth_day.jpg',
+      normalMap: 'textures/earth_normal.jpg',
+      clouds: 'textures/earth_clouds.jpg',
+    },
   },
   {
     name: 'Mars',
@@ -60,6 +68,7 @@ export const BODIES = [
     axialTilt: 25.19,
     color: 0xcc6644,
     parent: null,
+    textures: { map: 'textures/mars.jpg' },
   },
 
   // Outer planets
@@ -73,6 +82,7 @@ export const BODIES = [
     axialTilt: 3.13,
     color: 0xd4a574,
     parent: null,
+    textures: { map: 'textures/jupiter.jpg' },
   },
   {
     name: 'Saturn',
@@ -84,7 +94,8 @@ export const BODIES = [
     axialTilt: 26.73,
     color: 0xe8d5a3,
     parent: null,
-    rings: { innerRadius: 6, outerRadius: 10 },
+    textures: { map: 'textures/saturn.jpg' },
+    rings: { innerRadius: 6, outerRadius: 10, texture: 'textures/saturn_ring.png' },
   },
 
   // Earth's moon
@@ -98,6 +109,7 @@ export const BODIES = [
     axialTilt: 6.68,
     color: 0xcccccc,
     parent: 'Earth',
+    textures: { map: 'textures/moon.jpg' },
   },
 
   // Jupiter's Galilean moons

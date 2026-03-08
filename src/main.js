@@ -4,6 +4,7 @@ import { SolarSystem } from './scene/SolarSystem.js';
 import { Starfield } from './scene/Starfield.js';
 import { TimeController } from './time/TimeController.js';
 import { HUD } from './ui/HUD.js';
+import { LoadingOverlay } from './ui/LoadingOverlay.js';
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -41,6 +42,9 @@ const timeController = new TimeController();
 
 // HUD
 const hud = new HUD(timeController);
+
+// Loading overlay
+new LoadingOverlay();
 
 // Clock
 const clock = new THREE.Clock();

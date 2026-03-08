@@ -71,8 +71,23 @@ export class HUD {
 
   update() {
     const tc = this.timeController;
-    this.timeScaleEl.textContent = `Speed: ${tc.timeScaleLabel}`;
-    this.dateEl.textContent = tc.simulatedDate.toISOString().slice(0, 10);
-    this.pauseEl.textContent = tc.paused ? 'PAUSED' : '';
+
+    const speedText = `Speed: ${tc.timeScaleLabel}`;
+    if (this._lastSpeed !== speedText) {
+      this._lastSpeed = speedText;
+      this.timeScaleEl.textContent = speedText;
+    }
+
+    const dateText = tc.simulatedDate.toISOString().slice(0, 10);
+    if (this._lastDate !== dateText) {
+      this._lastDate = dateText;
+      this.dateEl.textContent = dateText;
+    }
+
+    const pauseText = tc.paused ? 'PAUSED' : '';
+    if (this._lastPause !== pauseText) {
+      this._lastPause = pauseText;
+      this.pauseEl.textContent = pauseText;
+    }
   }
 }
