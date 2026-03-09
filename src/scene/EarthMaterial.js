@@ -110,10 +110,17 @@ const fragmentShader = /* glsl */`
       rayShadow *= shadowOcclusion(vWorldPosition, uSunPos, uSunRadius, uOccPos[i], uOccRadius[i]);
     }
 
-    // Cloud shadow on surface
+    // Cloud shadow on surface — 5-tap weighted blur
     vec2 cloudUV = vUv + uCloudShadowOffset;
-    float cloudAlpha = texture2D(uCloudMap, cloudUV).r;
-    float cloudShadow = 1.0 - cloudAlpha * 0.4 * dayFactor;
+    float texelSize = 1.0 / 2048.0;
+    float cCenter = texture2D(uCloudMap, cloudUV).r;
+    float cLeft   = texture2D(uCloudMap, cloudUV + vec2(-texelSize, 0.0)).r;
+    float cRight  = texture2D(uCloudMap, cloudUV + vec2( texelSize, 0.0)).r;
+    float cUp     = texture2D(uCloudMap, cloudUV + vec2(0.0,  texelSize)).r;
+    float cDown   = texture2D(uCloudMap, cloudUV + vec2(0.0, -texelSize)).r;
+    float rawCloud = (cCenter * 2.0 + cLeft + cRight + cUp + cDown) / 6.0;
+    float softCloud = smoothstep(0.05, 0.7, rawCloud);
+    float cloudShadow = 1.0 - softCloud * 0.65 * dayFactor;
 
     // Day lighting
     float diffuse = max(NdotL, 0.0) * rayShadow;
@@ -121,7 +128,7 @@ const fragmentShader = /* glsl */`
 
     // Night city lights
     float nightFactor = 1.0 - dayFactor;
-    vec3 litNight = nightColor.rgb * uNightIntensity * nightFactor * (1.0 - cloudAlpha * 0.6);
+    vec3 litNight = nightColor.rgb * uNightIntensity * nightFactor * (1.0 - softCloud * 0.6);
     // Eclipse also darkens night lights (realistic — no sunlight reflected from atmosphere)
     litNight *= mix(1.0, 0.3, 1.0 - rayShadow);
 

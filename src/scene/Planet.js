@@ -3,6 +3,7 @@ import { CelestialBody } from './CelestialBody.js';
 import { loadTexture, applyTextureOpts } from '../loaders/TextureManager.js';
 import { Atmosphere } from './Atmosphere.js';
 import { createEarthMaterial } from './EarthMaterial.js';
+import { createCloudMaterial } from './CloudMaterial.js';
 
 const _sunDir = new THREE.Vector3();
 
@@ -33,23 +34,12 @@ export class Planet extends CelestialBody {
     if (bodyData.textures?.clouds) {
       const cloudTexture = loadTexture(bodyData.textures.clouds);
       cloudTexture.wrapS = THREE.RepeatWrapping;
-      const cloudSegments = isEarth ? 128 : 32;
-      const cloudGeometry = new THREE.SphereGeometry(bodyData.displayRadius * 1.01, cloudSegments, cloudSegments);
-      const cloudMaterial = new THREE.MeshStandardMaterial({
-        map: cloudTexture,
-        alphaMap: cloudTexture,
-        transparent: true,
-        depthWrite: false,
-        color: 0xffffff,
-      });
+      const cloudGeometry = new THREE.SphereGeometry(bodyData.displayRadius * 1.01, 128, 128);
+      const cloudMaterial = createCloudMaterial(cloudTexture);
       this.cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
       this.cloudAngularVelocity = this.rotationAngularVelocity * 0.05;
       this.mesh.add(this.cloudMesh);
-
-      // Pass cloud texture to Earth's custom shader
-      if (isEarth) {
-        material.uniforms.uCloudMap.value = cloudTexture;
-      }
+      material.uniforms.uCloudMap.value = cloudTexture;
     }
 
     // Atmosphere halo — added as sibling of mesh (not child) so renderOrder
@@ -66,26 +56,30 @@ export class Planet extends CelestialBody {
     if (this.cloudMesh && simDelta) {
       this.cloudMesh.rotation.y += this.cloudAngularVelocity * simDelta;
     }
-    if (this.atmosphere) {
+
+    // Compute sun direction once for atmosphere, surface, and cloud shaders
+    const earthUniforms = this.mesh.material.uniforms;
+    if (this.atmosphere || earthUniforms?.uSunDirection) {
       this.getWorldPosition(_sunDir);
       _sunDir.negate().normalize();
+    }
+
+    if (this.atmosphere) {
       this.atmosphere.material.uniforms.uSunDirection.value.copy(_sunDir);
     }
 
-    // Update Earth custom shader uniforms
-    const earthUniforms = this.mesh.material.uniforms;
     if (earthUniforms?.uSunDirection) {
-      if (!this.atmosphere) {
-        this.getWorldPosition(_sunDir);
-        _sunDir.negate().normalize();
-      }
       earthUniforms.uSunDirection.value.copy(_sunDir);
 
       if (this.cloudMesh) {
+        this.cloudMesh.material.uniforms.uSunDirection.value.copy(_sunDir);
+
         const cloudRotOffset = this.cloudMesh.rotation.y - this.mesh.rotation.y;
+        const parallaxScale = 0.004;
+        const sunElev = Math.max(Math.abs(_sunDir.z), 0.25);
         earthUniforms.uCloudShadowOffset.value.set(
-          _sunDir.x * 0.003 + cloudRotOffset / (2 * Math.PI),
-          0
+          _sunDir.x * parallaxScale / sunElev + cloudRotOffset / (2 * Math.PI),
+          -_sunDir.y * parallaxScale / sunElev
         );
       }
     }
