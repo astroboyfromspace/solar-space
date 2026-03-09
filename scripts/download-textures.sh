@@ -42,6 +42,8 @@ download mars "${SSS_BASE}/2k_mars.jpg"
 download jupiter "${SSS_BASE}/2k_jupiter.jpg"
 download saturn "${SSS_BASE}/2k_saturn.jpg"
 download saturn_ring "${SSS_BASE}/2k_saturn_ring_alpha.png"
+download uranus "${SSS_BASE}/2k_uranus.jpg"
+download neptune "${SSS_BASE}/2k_neptune.jpg"
 download moon "${SSS_BASE}/2k_moon.jpg"
 
 # Convert earth_normal TIF to JPG if available
@@ -65,11 +67,15 @@ fi
 echo ""
 echo "Attempting Galilean moons + Titan textures..."
 
-download io "https://upload.wikimedia.org/wikipedia/commons/7/7b/Io_color_merged_mosaic.jpg"
-download europa "https://upload.wikimedia.org/wikipedia/commons/e/e4/Europa-moonGL.jpg"
-download ganymede "https://upload.wikimedia.org/wikipedia/commons/2/21/Ganymede_-_Pair.jpg"
+download io "https://upload.wikimedia.org/wikipedia/commons/7/7e/Global_Image_of_Io_-_GPN-2000-000419.jpg"
+download europa "https://upload.wikimedia.org/wikipedia/commons/2/26/Europa_Voyager_GalileoSSI_global_mosaic.jpg"
+download ganymede "https://upload.wikimedia.org/wikipedia/commons/d/db/Map_of_Ganymede_by_Bj%C3%B6rn_J%C3%B3nsson.jpg"
 download callisto "https://upload.wikimedia.org/wikipedia/commons/e/e9/Callisto.jpg"
-download titan "https://upload.wikimedia.org/wikipedia/commons/6/60/Titan_in_natural_color_Cassini.jpg"
+download titan "https://upload.wikimedia.org/wikipedia/commons/8/84/Titan_in_natural_color_Cassini.jpg"
+
+echo ""
+echo "Attempting additional moon textures..."
+download triton "https://upload.wikimedia.org/wikipedia/commons/2/26/Global_Color_Mosaic_of_Triton_-_GPN-2000-000471.jpg"
 
 echo ""
 echo "Done! Textures are in: $TEXTURE_DIR"
