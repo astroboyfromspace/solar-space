@@ -17,6 +17,8 @@
 - **Surface walking** — land on any body and explore with FPS-style controls (WASD + mouse look)
 - **Free orbital camera** — orbit, zoom, pan, and click any body to land on it
 - **Time simulation** — speed from 1s = 1 hour up to 1s = 1 year, with pause/play
+- **Real star catalog** — ~9,000 stars from the [HYG Database](https://github.com/astronexus/HYG-Database) with accurate positions, spectral colors, and magnitude-based brightness (brightest stars trigger bloom glow)
+- **Star identification** — hover over the 500 brightest stars to see their name and distance in light-years
 - **Visual effects** — bloom glow, atmospheric shaders, lens flare, soft shadows, and Saturn's rings
 - **Orbit lines** — toggle orbital path visualization
 
@@ -59,6 +61,7 @@ The dev server opens the app in your browser automatically.
 |---------|-------------|
 | `npm run build` | Production build to `/dist` |
 | `npm run preview` | Preview the production build |
+| `npm run generate-stars` | Regenerate star catalog from HYG Database |
 
 ## Tech Stack
 

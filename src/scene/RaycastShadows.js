@@ -80,15 +80,32 @@ function applyRaycastShadow(material) {
 const SHADOW_CONFIG = [
   // Moons cast shadows on planets
   { receiver: 'Earth',   occluders: ['Moon'] },
+  { receiver: 'Mars',    occluders: ['Phobos', 'Deimos'] },
   { receiver: 'Jupiter', occluders: ['Io', 'Europa', 'Ganymede', 'Callisto'] },
-  { receiver: 'Saturn',  occluders: ['Titan'] },
+  { receiver: 'Saturn',  occluders: ['Titan', 'Rhea', 'Dione', 'Tethys', 'Iapetus'] },
+  { receiver: 'Uranus',  occluders: ['Titania', 'Oberon', 'Umbriel', 'Ariel', 'Miranda'] },
+  { receiver: 'Neptune', occluders: ['Triton'] },
   // Planets cast shadows on moons + moons shadow each other
-  { receiver: 'Moon',     occluders: ['Earth'] },
+  { receiver: 'Moon',      occluders: ['Earth'] },
+  { receiver: 'Phobos',   occluders: ['Mars'] },
+  { receiver: 'Deimos',   occluders: ['Mars'] },
   { receiver: 'Io',       occluders: ['Jupiter', 'Europa', 'Ganymede', 'Callisto'] },
   { receiver: 'Europa',   occluders: ['Jupiter', 'Io', 'Ganymede', 'Callisto'] },
   { receiver: 'Ganymede', occluders: ['Jupiter', 'Io', 'Europa', 'Callisto'] },
   { receiver: 'Callisto', occluders: ['Jupiter', 'Io', 'Europa', 'Ganymede'] },
-  { receiver: 'Titan',    occluders: ['Saturn'] },
+  { receiver: 'Mimas',     occluders: ['Saturn'] },
+  { receiver: 'Enceladus', occluders: ['Saturn'] },
+  { receiver: 'Tethys',    occluders: ['Saturn'] },
+  { receiver: 'Dione',     occluders: ['Saturn'] },
+  { receiver: 'Rhea',      occluders: ['Saturn'] },
+  { receiver: 'Titan',     occluders: ['Saturn'] },
+  { receiver: 'Iapetus',   occluders: ['Saturn'] },
+  { receiver: 'Miranda',  occluders: ['Uranus'] },
+  { receiver: 'Ariel',    occluders: ['Uranus'] },
+  { receiver: 'Umbriel',  occluders: ['Uranus'] },
+  { receiver: 'Titania',  occluders: ['Uranus'] },
+  { receiver: 'Oberon',   occluders: ['Uranus'] },
+  { receiver: 'Triton',   occluders: ['Neptune'] },
 ];
 
 const _pos = new THREE.Vector3();

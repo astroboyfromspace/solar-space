@@ -73,6 +73,38 @@ window.addEventListener('keydown', (e) => {
 // Loading overlay
 new LoadingOverlay();
 
+// Star tooltip
+const starTooltip = document.createElement('div');
+starTooltip.style.cssText = `
+  position: fixed;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.75);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: monospace;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  display: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+`;
+document.body.appendChild(starTooltip);
+
+renderer.domElement.addEventListener('pointermove', (e) => {
+  const ndcX = (e.clientX / window.innerWidth) * 2 - 1;
+  const ndcY = -(e.clientY / window.innerHeight) * 2 + 1;
+  const hit = starfield.hitTest(ndcX, ndcY, camera);
+  if (hit) {
+    const dist = hit.distLy !== null ? `${hit.distLy} ly` : 'unknown distance';
+    starTooltip.textContent = `${hit.name}  \u2014  ${dist}`;
+    starTooltip.style.display = 'block';
+    starTooltip.style.left = `${e.clientX + 14}px`;
+    starTooltip.style.top = `${e.clientY - 14}px`;
+  } else {
+    starTooltip.style.display = 'none';
+  }
+});
+
 // Clock
 const clock = new THREE.Clock();
 
@@ -84,6 +116,7 @@ window.addEventListener('resize', () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   composer.setSize(window.innerWidth, window.innerHeight);
   composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  starfield.updatePixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
 // Animation loop

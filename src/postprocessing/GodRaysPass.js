@@ -48,7 +48,7 @@ const GodRaysShader = {
         vec3 samp = texture2D(tDiffuse, clamp(sampleUV, 0.0, 1.0)).rgb;
         samp = min(samp, 1.0);
         float lum = dot(samp, vec3(0.2126, 0.7152, 0.0722));
-        float bright = smoothstep(0.6, 1.0, lum);
+        float bright = smoothstep(1.5, 3.0, lum);
         rays += samp * bright * illumination * uWeight;
         illumination *= uDecay;
       }
