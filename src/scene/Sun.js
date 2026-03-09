@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Lensflare, LensflareElement } from 'three/examples/jsm/objects/Lensflare.js';
 import { CelestialBody } from './CelestialBody.js';
+import { SunCorona } from './SunCorona.js';
 import { applyTextureOpts } from '../loaders/TextureManager.js';
 
 function createFlareTexture(size = 256) {
@@ -29,16 +30,12 @@ export class Sun extends CelestialBody {
     this.mesh.rotation.x = THREE.MathUtils.degToRad(bodyData.axialTilt);
     this.add(this.mesh);
 
+    // Corona glow
+    this.corona = new SunCorona(bodyData.displayRadius);
+    this.add(this.corona);
+
     // PointLight with no falloff so distant planets get light
     this.light = new THREE.PointLight(0xffffff, 2, 0, 0);
-    this.light.castShadow = true;
-    this.light.shadow.mapSize.width = 2048;
-    this.light.shadow.mapSize.height = 2048;
-    this.light.shadow.camera.near = 10;
-    this.light.shadow.camera.far = 1000;
-    this.light.shadow.bias = -0.001;
-    this.light.shadow.normalBias = 0.5;
-    this.light.shadow.autoUpdate = false;
     this.add(this.light);
 
     // Lens flare
@@ -54,6 +51,5 @@ export class Sun extends CelestialBody {
 
   update(simDelta) {
     super.update(simDelta);
-    if (simDelta) this.light.shadow.needsUpdate = true;
   }
 }

@@ -7,6 +7,7 @@ import { CameraManager } from './controls/CameraManager.js';
 import { SolarSystem } from './scene/SolarSystem.js';
 import { Starfield } from './scene/Starfield.js';
 import { TimeController } from './time/TimeController.js';
+import { GodRaysPass } from './postprocessing/GodRaysPass.js';
 import { HUD } from './ui/HUD.js';
 import { LoadingOverlay } from './ui/LoadingOverlay.js';
 
@@ -18,8 +19,6 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 // Scene
@@ -52,6 +51,8 @@ const timeController = new TimeController();
 // Post-processing
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
+const sun = solarSystem.bodyObjects.get('Sun');
+composer.addPass(new GodRaysPass(sun, camera));
 composer.addPass(new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight), 0.8, 0.4, 0.85,
 ));

@@ -5,6 +5,7 @@ import { Planet } from './Planet.js';
 import { Moon } from './Moon.js';
 import { Rings } from './Rings.js';
 import { OrbitLines } from './OrbitLines.js';
+import { RaycastShadows } from './RaycastShadows.js';
 
 export class SolarSystem extends THREE.Group {
   constructor() {
@@ -51,6 +52,7 @@ export class SolarSystem extends THREE.Group {
       }
     }
 
+    this._shadows = new RaycastShadows(this.bodyObjects);
     this._orbitLines = new OrbitLines(this);
   }
 
@@ -58,9 +60,11 @@ export class SolarSystem extends THREE.Group {
     return this._orbitLines.toggle();
   }
 
+
   update(simDelta) {
     for (const body of this.bodyObjects.values()) {
       body.update(simDelta);
     }
+    this._shadows.update();
   }
 }

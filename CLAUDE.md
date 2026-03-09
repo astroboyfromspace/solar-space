@@ -14,6 +14,8 @@ Interactive 3D Solar System visualization built with **Vite + Three.js**. Pure v
 
 No test framework is configured.
 
+**Do NOT run `npm run build` to verify changes.** The user will report build errors if any occur.
+
 ## Architecture
 
 ### Entry Point & Render Loop
