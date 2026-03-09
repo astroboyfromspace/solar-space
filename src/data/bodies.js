@@ -59,8 +59,10 @@ export const BODIES = [
       map: 'textures/earth_day.jpg',
       normalMap: 'textures/earth_normal.jpg',
       clouds: 'textures/earth_clouds.jpg',
+      nightMap: 'textures/earth_night.jpg',
+      specularMap: 'textures/earth_specular.jpg',
     },
-    atmosphere: { color: [0.3, 0.6, 1.0], intensity: 0.6, falloff: 5.0 },
+    atmosphere: { color: [0.3, 0.6, 1.0], sunsetColor: [1.0, 0.4, 0.1], intensity: 0.3, falloff: 4.0 },
   },
   {
     name: 'Mars',

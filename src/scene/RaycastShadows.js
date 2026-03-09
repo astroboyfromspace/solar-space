@@ -137,7 +137,9 @@ export class RaycastShadows {
   }
 
   _applyAndTrack(material, occluderNames) {
-    applyRaycastShadow(material);
+    if (!material.userData.shadowShader) {
+      applyRaycastShadow(material);
+    }
     this._entries.push({ material, occluderNames });
   }
 
