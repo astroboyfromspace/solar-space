@@ -8,6 +8,7 @@ export class FreeCamera {
     this.controls.minDistance = 1;
     this.controls.maxDistance = 50000;
     this.controls.target.set(0, 0, 0);
+    this.focusedBody = null;
   }
 
   enable() {
@@ -22,7 +23,22 @@ export class FreeCamera {
     this.controls.target.copy(vec3);
   }
 
+  setFocusedBody(body) {
+    this.focusedBody = body;
+    if (body) {
+      body.mesh.getWorldPosition(this.controls.target);
+    }
+  }
+
+  clearFocus() {
+    this.focusedBody = null;
+    this.controls.target.set(0, 0, 0);
+  }
+
   update() {
+    if (this.focusedBody) {
+      this.focusedBody.mesh.getWorldPosition(this.controls.target);
+    }
     this.controls.update();
   }
 }

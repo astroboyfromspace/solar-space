@@ -19,6 +19,9 @@ export class CameraManager {
 
     this.mode = 'freefly'; // 'freefly' | 'surface' | 'transition'
     this.onModeChange = null; // callback for HUD
+    this.onBodyFocused = null; // callback: (body) => void
+    this.onBodyUnfocused = null; // callback: () => void
+    this.focusedBody = null;
     this._surfaceInfo = { latitude: 0, longitude: 0 };
 
     // Raycasting
@@ -103,13 +106,59 @@ export class CameraManager {
     }
     if (!targetBody) return;
 
-    // Convert hit point to mesh-local space
-    const localPoint = mesh.worldToLocal(hit.point.clone());
-    const r = targetBody.bodyData.displayRadius;
-    const lat = Math.asin(THREE.MathUtils.clamp(localPoint.y / r, -1, 1));
-    const lon = Math.atan2(localPoint.x, localPoint.z);
+    this.focusBody(targetBody);
+  }
 
-    this.transitionToSurface(targetBody, lat, lon);
+  focusBody(body) {
+    if (this.mode === 'surface') {
+      this.surfaceCamera.detach();
+    }
+
+    this.freeCamera.disable();
+    this.focusedBody = body;
+
+    const startPos = this.camera.position.clone();
+    const startQuat = this.camera.quaternion.clone();
+
+    // Compute end position: offset from body
+    const bodyWorldPos = new THREE.Vector3();
+    body.mesh.getWorldPosition(bodyWorldPos);
+    const radius = body.bodyData.displayRadius;
+    const viewDistance = radius * PULLBACK_RADII;
+
+    const cameraDir = this._tmpVec.copy(this.camera.position).sub(bodyWorldPos);
+    if (cameraDir.length() < 0.001) {
+      cameraDir.set(1, 0.5, 1);
+    }
+    cameraDir.normalize();
+    const endPos = bodyWorldPos.clone().add(cameraDir.clone().multiplyScalar(viewDistance));
+    const endQuat = this._lookAtQuaternion(endPos, bodyWorldPos).clone();
+
+    this.mode = 'transition';
+    this._transition = {
+      direction: 'toFocus',
+      body,
+      startPos,
+      startQuat,
+      endPos,
+      endQuat,
+      elapsed: 0,
+      duration: TRANSITION_DURATION,
+    };
+  }
+
+  unfocusBody() {
+    this.focusedBody = null;
+    this.freeCamera.clearFocus();
+    if (this.onBodyUnfocused) this.onBodyUnfocused();
+  }
+
+  landOnFocusedBody() {
+    if (!this.focusedBody) return;
+    const body = this.focusedBody;
+    this.focusedBody = null;
+    this.freeCamera.clearFocus();
+    this.transitionToSurface(body, 0, 0);
   }
 
   transitionToSurface(body, lat, lon) {
@@ -147,12 +196,13 @@ export class CameraManager {
     // End quaternion: look at body center
     const endQuat = this._lookAtQuaternion(endPos, bodyWorldPos).clone();
 
-    // Set OrbitControls target to body world position
-    this.freeCamera.setTarget(bodyWorldPos);
+    // Keep focus on the body we were standing on
+    this.focusedBody = result.body;
 
     this.mode = 'transition';
     this._transition = {
-      direction: 'toFreefly',
+      direction: 'toFocus',
+      body: result.body,
       startPos,
       startQuat,
       endPos,
@@ -178,6 +228,16 @@ export class CameraManager {
     if (this.onModeChange) this.onModeChange('freefly');
   }
 
+  _activateFocusMode(body) {
+    this.mode = 'freefly';
+    this.camera.near = NEAR_DEFAULT;
+    this.camera.updateProjectionMatrix();
+    this.freeCamera.setFocusedBody(body);
+    this.freeCamera.enable();
+    if (this.onModeChange) this.onModeChange('freefly');
+    if (this.onBodyFocused) this.onBodyFocused(body);
+  }
+
   getSurfaceInfo() {
     if (this.mode !== 'surface' || !this.surfaceCamera.active) return null;
     this._surfaceInfo.latitude = this.surfaceCamera.latitude;
@@ -196,13 +256,7 @@ export class CameraManager {
   landOnBody(name) {
     const body = this.solarSystem.bodyObjects.get(name);
     if (!body) return;
-
-    if (this.mode === 'surface') {
-      // Detach from current body first
-      this.surfaceCamera.detach();
-    }
-
-    this.transitionToSurface(body, 0, 0);
+    this.focusBody(body);
   }
 
   update(delta) {
@@ -226,13 +280,25 @@ export class CameraManager {
       surfaceLocalPosition(this._tmpLocalPos, t.body, t.lat, t.lon);
       const endPos = this._tmpVec.copy(this._tmpLocalPos).applyMatrix4(t.body.mesh.matrixWorld);
 
-      // End quaternion: look at body center
       const bodyWorldPos = this._tmpVec2;
       t.body.mesh.getWorldPosition(bodyWorldPos);
-      const endQuat = this._lookAtQuaternion(endPos, bodyWorldPos);
 
       this.camera.position.lerpVectors(t.startPos, endPos, alpha);
-      this.camera.quaternion.slerpQuaternions(t.startQuat, endQuat, alpha);
+      // Always look at the body — avoids slerp spinning artifacts
+      this.camera.lookAt(bodyWorldPos);
+    } else if (t.direction === 'toFocus') {
+      // Recompute end position each frame (body moves)
+      const bodyWorldPos = this._tmpVec2;
+      t.body.mesh.getWorldPosition(bodyWorldPos);
+
+      const radius = t.body.bodyData.displayRadius;
+      const viewDistance = radius * PULLBACK_RADII;
+      const dir = this._tmpVec.copy(t.endPos).sub(bodyWorldPos).normalize();
+      const endPos = bodyWorldPos.clone().add(dir.multiplyScalar(viewDistance));
+
+      this.camera.position.lerpVectors(t.startPos, endPos, alpha);
+      // Always look at the body — avoids slerp spinning artifacts
+      this.camera.lookAt(bodyWorldPos);
     } else {
       // toFreefly: both endpoints fixed
       this.camera.position.lerpVectors(t.startPos, t.endPos, alpha);
@@ -243,6 +309,8 @@ export class CameraManager {
       this._transition = null;
       if (t.direction === 'toSurface') {
         this._activateSurfaceMode(t.body, t.lat, t.lon);
+      } else if (t.direction === 'toFocus') {
+        this._activateFocusMode(t.body);
       } else {
         this._activateFreeflyMode();
       }

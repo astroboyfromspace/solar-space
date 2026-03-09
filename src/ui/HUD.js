@@ -74,7 +74,7 @@ export class HUD {
 
     const defaultOpt = document.createElement('option');
     defaultOpt.value = '';
-    defaultOpt.textContent = '-- Land on body --';
+    defaultOpt.textContent = '-- Go to body --';
     this.bodySelect.appendChild(defaultOpt);
 
     for (const body of BODIES) {
@@ -142,7 +142,7 @@ export class HUD {
       'Drag \u2014 rotate',
       'Scroll \u2014 zoom',
       'MMB \u2014 pan',
-      'Click body \u2014 land',
+      'Click body \u2014 focus',
       'O \u2014 toggle orbits',
       'Space \u2014 pause/play',
     ]);

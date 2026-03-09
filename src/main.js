@@ -9,7 +9,9 @@ import { Starfield } from './scene/Starfield.js';
 import { TimeController } from './time/TimeController.js';
 import { GodRaysPass } from './postprocessing/GodRaysPass.js';
 import { HUD } from './ui/HUD.js';
+import { InfoPanel } from './ui/InfoPanel.js';
 import { LoadingOverlay } from './ui/LoadingOverlay.js';
+import { TRIVIA } from './data/trivia.js';
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -63,6 +65,23 @@ const hud = new HUD(timeController, cameraManager);
 hud.onBodySelected = (name) => cameraManager.landOnBody(name);
 cameraManager.onModeChange = (mode, bodyName) => hud.setMode(mode, bodyName);
 
+// Info panel
+const infoPanel = new InfoPanel();
+infoPanel.onExploreSurface = () => {
+  infoPanel.hide();
+  cameraManager.landOnFocusedBody();
+};
+infoPanel.onClose = () => {
+  infoPanel.hide();
+  cameraManager.unfocusBody();
+};
+cameraManager.onBodyFocused = (body) => {
+  infoPanel.show(body.bodyData, TRIVIA[body.bodyData.name] || null);
+};
+cameraManager.onBodyUnfocused = () => {
+  infoPanel.hide();
+};
+
 // Orbit lines toggle
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyO' && e.target === document.body) {
@@ -90,18 +109,77 @@ starTooltip.style.cssText = `
 `;
 document.body.appendChild(starTooltip);
 
+// Body hover tooltip
+const bodyTooltip = document.createElement('div');
+bodyTooltip.style.cssText = `
+  position: fixed;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.75);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: monospace;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  display: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 50;
+`;
+document.body.appendChild(bodyTooltip);
+
+const bodyRaycaster = new THREE.Raycaster();
+const bodyMouseVec = new THREE.Vector2();
+
 renderer.domElement.addEventListener('pointermove', (e) => {
+  // Star tooltip
   const ndcX = (e.clientX / window.innerWidth) * 2 - 1;
   const ndcY = -(e.clientY / window.innerHeight) * 2 + 1;
-  const hit = starfield.hitTest(ndcX, ndcY, camera);
-  if (hit) {
-    const dist = hit.distLy !== null ? `${hit.distLy} ly` : 'unknown distance';
-    starTooltip.textContent = `${hit.name}  \u2014  ${dist}`;
+  const starHit = starfield.hitTest(ndcX, ndcY, camera);
+  if (starHit) {
+    const dist = starHit.distLy !== null ? `${starHit.distLy} ly` : 'unknown distance';
+    starTooltip.textContent = `${starHit.name}  \u2014  ${dist}`;
     starTooltip.style.display = 'block';
     starTooltip.style.left = `${e.clientX + 14}px`;
     starTooltip.style.top = `${e.clientY - 14}px`;
   } else {
     starTooltip.style.display = 'none';
+  }
+
+  // Body tooltip (only in freefly mode, not when info panel is open)
+  if (cameraManager.mode !== 'freefly' || infoPanel.isVisible) {
+    bodyTooltip.style.display = 'none';
+    renderer.domElement.style.cursor = '';
+    return;
+  }
+
+  bodyMouseVec.set(ndcX, ndcY);
+  bodyRaycaster.setFromCamera(bodyMouseVec, camera);
+
+  const meshes = [];
+  for (const body of solarSystem.bodyObjects.values()) {
+    if (body.mesh) meshes.push(body.mesh);
+  }
+
+  const hits = bodyRaycaster.intersectObjects(meshes, false);
+  if (hits.length > 0) {
+    const hitMesh = hits[0].object;
+    let bodyName = null;
+    for (const [name, body] of solarSystem.bodyObjects) {
+      if (body.mesh === hitMesh) {
+        bodyName = name;
+        break;
+      }
+    }
+    if (bodyName) {
+      bodyTooltip.textContent = bodyName;
+      bodyTooltip.style.display = 'block';
+      bodyTooltip.style.left = `${e.clientX + 14}px`;
+      bodyTooltip.style.top = `${e.clientY - 14}px`;
+      renderer.domElement.style.cursor = 'pointer';
+    }
+  } else {
+    bodyTooltip.style.display = 'none';
+    renderer.domElement.style.cursor = '';
   }
 });
 
